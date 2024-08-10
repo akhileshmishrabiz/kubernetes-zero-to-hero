@@ -198,17 +198,31 @@ kubectl logs -n volumes support-tier-... poller --tail 1 (You can use tab comple
 # ConfigMaps and Secrets
 
 kubectl create -f 10.1-namespace.yaml
+
 kubectl create -n config -f 10.2-data_tier_config.yaml -f 10.3-data_tier.yaml
+
 kubectl exec -n config data-tier-... -it -- /bin/bash (You can use tab completion to display the possible values to replace ... with)
+
 cat /etc/redis/redis.conf
+
 redis-cli CONFIG GET tcp-keepalive
+
 exit
+
 kubectl edit -n config configmaps redis-config
+
 kubectl exec -n config data-tier-... -- redis-cli CONFIG GET tcp-keepalive (You can use tab completion to display the possible values to replace ... with)
+
 kubectl rollout -n config restart deployment data-tier
+
 kubectl exec -n config data-tier-... -- redis-cli CONFIG GET tcp-keepalive (You can use tab completion to display the possible values to replace ... with)
+
 kubectl create -f 10.4-app_tier_secret.yaml -n config
+
 kubectl describe -n config secret app-tier-secret
+
 kubectl edit -n config secrets app-tier-secret
+
 kubectl create -f 10.5-app_tier.yaml -n config
+
 kubectl exec -n config app-tier-... -- env (You can use tab completion to display the possible values to replace ... with)
