@@ -73,8 +73,11 @@ kubectl get -n deployments deployments
 kubectl -n deployments get pods
 kubectl scale -n deployments deployment support-tier --replicas=5
 kubectl -n deployments get pods
+
 kubectl delete -n deployments pods support-tier-... support-tier-... --wait=false (You can use tab completion to display the possible values to replace ... with)
+
 watch -n 1 kubectl -n deployments get pods
+
 kubectl scale -n deployments deployment app-tier --replicas=5
 kubectl -n deployments get pods
 kubectl describe -n deployments service app-tier
@@ -95,6 +98,7 @@ kubectl get -n deployments deployments app-tier
 kubectl create -f 6.2-autoscale.yaml -n deployments
 
 watch -n 1 kubectl get -n deployments deployments app-tier 
+
 # This can take up to 10 minutes to fully take effect mainly due to the autoscaler's 5 minute default 
 #initialization period. You may want to skip waiting. The image below shows the output of kubectl describe -n deployments hpa after waiting long enough
 #alt
@@ -113,28 +117,45 @@ watch -n 1 kubectl get -n deployments deployments app-tier
 # Rolling Updates and Rollbacks
 
 kubectl delete -n deployments hpa app-tier
+
 kubectl edit -n deployments deployment app-tier
+
 watch -n 1 kubectl get -n deployments deployments app-tier 
+
 kubectl edit -n deployments deployment app-tier
+
 kubectl rollout -n deployments status deployment app-tier
+
 tmux
 kubectl edit -n deployments deployments app-tier (left terminal)
+
 kubectl rollout -n deployments status deployment app-tier (right terminal)
+
 kubectl rollout -n deployments pause deployment app-tier (left terminal)
+
 kubectl get deployments -n deployments app-tier (left terminal)
+
 kubectl rollout -n deployments resume deployment app-tier (left terminal)
+
 kubectl rollout -n deployments undo deployment app-tier
+
 kubectl scale -n deployments deployment app-tier --replicas=1
  
 
 # Probes
 
 kubectl create -f 7.1-namespace.yaml
+
 kubectl create -f 7.2-data_tier.yaml -n probes
+
 kubectl get deployments -n probes -w
+
 kubectl create -f 7.3-app_tier.yaml -n probes
+
 kubectl get -n probes deployments app-tier -w
+
 kubectl get -n probes pods
+
 kubectl logs -n probes app-tier-... | cut -d' ' -f5,8-11 (You can use tab completion to display the possible values to replace ... with)
  
 
@@ -148,9 +169,12 @@ kubectl logs -n probes app-tier-... await-redis (You can use tab completion to d
 # Volumes
 
 kubectl -n deployments logs support-tier-... poller --tail 1 # (You can use tab completion to display the possible values to replace ... with)
+
 kubectl exec -n deployments data-tier-... -it -- /bin/bash # (You can use tab completion to display the possible values to replace ... with)
+
 kill 1
 kubectl -n deployments get pods
+
 kubectl -n deployments logs support-tier-... poller --tail 1 # (You can use tab completion to display the possible values to replace ... with)
 
 Note: It takes around a couple of minutes for the effects of the restart to settle. The poller will stop updating and report the last value before restarting until it can reach the new data tier value. Try again after a minute if you don't see a relatively small value)
