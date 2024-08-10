@@ -162,7 +162,9 @@ kubectl logs -n probes app-tier-... | cut -d' ' -f5,8-11 (You can use tab comple
 # Init Containers
 
 kubectl apply -f 8.1-app_tier.yaml -n probes
+
 kubectl describe pod -n probes app-tier... (You can use tab completion to display the possible values to replace ... with)
+
 kubectl logs -n probes app-tier-... await-redis (You can use tab completion to display the possible values to replace ... with)
  
 
