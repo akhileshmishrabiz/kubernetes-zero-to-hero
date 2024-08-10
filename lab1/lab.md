@@ -9,16 +9,23 @@ kubectl create -f 1.1-basic_pod.yaml
 kubectl get pods
 
 kubectl describe pod mypod | more
+
 kubectl delete pod mypod
+
 kubectl create -f 1.2-port_pod.yaml
+
 kubectl describe pod mypod | more
 
 curl 192.168.###.###:80 (Replace ###.### with the IP address octets from the describe output)
 
 kubectl describe pod mypod | more
+
 kubectl delete pod mypod
+
 kubectl create -f 1.4-resources_pod.yaml
+
 kubectl describe pod mypod | more
+
 Note: kubectl will accept the singular or plural form of resource kinds. For example kubectl get pods and kubectl get pod are equivalent.
 
  
@@ -26,9 +33,13 @@ Note: kubectl will accept the singular or plural form of resource kinds. For exa
 # Services
 
 kubectl create -f 2.1-web_service.yaml
+
 kubectl get services
+
 kubectl describe service webserver
+
 kubectl describe nodes | grep -i addresses -A 1
+
 curl 10.0.0.100:3#### (replace #### with the actual port digits)
  
 
@@ -68,10 +79,15 @@ kubectl logs -n service-discovery support-tier poller -f
 # Deployments
 
 kubectl create -f 5.1-namespace.yaml
+
 kubectl create -n deployments -f 5.2-data_tier.yaml -f 5.3-app_tier.yaml -f 5.4-support_tier.yaml
+
 kubectl get -n deployments deployments
+
 kubectl -n deployments get pods
+
 kubectl scale -n deployments deployment support-tier --replicas=5
+
 kubectl -n deployments get pods
 
 kubectl delete -n deployments pods support-tier-... support-tier-... --wait=false (You can use tab completion to display the possible values to replace ... with)
@@ -79,7 +95,9 @@ kubectl delete -n deployments pods support-tier-... support-tier-... --wait=fals
 watch -n 1 kubectl -n deployments get pods
 
 kubectl scale -n deployments deployment app-tier --replicas=5
+
 kubectl -n deployments get pods
+
 kubectl describe -n deployments service app-tier
  
 
@@ -181,17 +199,29 @@ kubectl -n deployments logs support-tier-... poller --tail 1 # (You can use tab 
 
 Note: It takes around a couple of minutes for the effects of the restart to settle. The poller will stop updating and report the last value before restarting until it can reach the new data tier value. Try again after a minute if you don't see a relatively small value)
 kubectl create -f 9.1-namespace.yaml
+
 aws ec2 describe-volumes --region=us-west-2 --filters="Name=tag:Type,Values=PV" --query="Volumes[0].VolumeId" --output=text
+
 vol_id=$(aws ec2 describe-volumes --region=us-west-2 --filters="Name=tag:Type,Values=PV" --query="Volumes[0].VolumeId" --output=text)
+
 sed -i "s/INSERT_VOLUME_ID/$vol_id/" 9.2-pv_data_tier.yaml
+
 kubectl create -n volumes -f 9.2-pv_data_tier.yaml -f 9.3-app_tier.yaml -f 9.4-support_tier.yaml
-kubectl describe -n volumes pvc
+
+kubectl describe -n volumes PVC
+
 kubectl describe -n volumes pod data-tier-... (You can use tab completion to display the possible values to replace ... with)
+
 kubectl logs -n volumes support-tier-... poller --tail 1 (You can use tab completion to display the possible values to replace ... with)
+
 Note: It takes a few minutes for all of the readiness checks to pass and for the counter to start incrementing. If you don't see a counter value output then try again after a minute or two.
+
 kubectl delete -n volumes deployments data-tier
+
 kubectl get -n volumes pods
+
 kubectl create -n volumes -f 9.2-pv_data_tier.yaml
+
 kubectl logs -n volumes support-tier-... poller --tail 1 (You can use tab completion to display the possible values to replace ... with)
  
 
