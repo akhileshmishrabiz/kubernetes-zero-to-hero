@@ -1,9 +1,13 @@
 # Pods
 
 kubectl get pods
+
 cd src
+
 kubectl create -f 1.1-basic_pod.yaml
+
 kubectl get pods
+
 kubectl describe pod mypod | more
 kubectl delete pod mypod
 kubectl create -f 1.2-port_pod.yaml
@@ -31,21 +35,32 @@ curl 10.0.0.100:3#### (replace #### with the actual port digits)
 # Multi-Container Pods
 
 kubectl create -f 3.1-namespace.yaml
+
 kubectl create -f 3.2-multi_container.yaml -n microservice
+
 kubectl get -n microservice pod app
+
 kubectl describe -n microservice pod app
+
 kubectl logs -n microservice app counter --tail 10
+
 kubectl logs -n microservice app poller -f
  
 
 # Service Discovery
 
 kubectl create -f 4.1-namespace.yaml
+
 kubectl create -f 4.2-data_tier.yaml -n service-discovery
+
 kubectl get pod -n service-discovery
+
 kubectl describe service -n service-discovery data-tier
+
 kubectl create -f 4.3-app_tier.yaml -n service-discovery
+
 kubectl create -f 4.4-support_tier.yaml -n service-discovery
+
 kubectl get pods -n service-discovery
 kubectl logs -n service-discovery support-tier poller -f
  
