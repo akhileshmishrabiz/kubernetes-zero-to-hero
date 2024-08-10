@@ -83,17 +83,30 @@ kubectl describe -n deployments service app-tier
 # Autoscaling
 
 kubectl apply -f metrics-server/ # apply recent version of metrics server
+
 watch kubectl top pods -n deployments
+
 kubectl create -f 6.1-app_tier_cpu_request.yaml -n deployments
+
 kubectl apply -f 6.1-app_tier_cpu_request.yaml -n deployments
+
 kubectl get -n deployments deployments app-tier
+
 kubectl create -f 6.2-autoscale.yaml -n deployments
-watch -n 1 kubectl get -n deployments deployments app-tier # This can take up to 10 minutes to fully take effect mainly due to the autoscaler's 5 minute default initialization period. You may want to skip waiting. The image below shows the output of kubectl describe -n deployments hpa after waiting long enough
-alt
+
+watch -n 1 kubectl get -n deployments deployments app-tier 
+# This can take up to 10 minutes to fully take effect mainly due to the autoscaler's 5 minute default 
+#initialization period. You may want to skip waiting. The image below shows the output of kubectl describe -n deployments hpa after waiting long enough
+#alt
+
 kubectl api-resources
+
 kubectl describe -n deployments hpa
+
 kubectl get -n deployments hpa
+
 kubectl edit -n deployments hpa
+
 watch -n 1 kubectl get -n deployments deployments app-tier
  
 
