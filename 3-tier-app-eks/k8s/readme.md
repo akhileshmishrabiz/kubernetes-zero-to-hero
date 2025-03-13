@@ -282,36 +282,47 @@ kubectl logs -n kube-system -l app.kubernetes.io/name=aws-load-balancer-controll
 # check if the ALB created -> in ec2 dashboard
 ```
 
-This will give you the external address of the ALB. Use this address to access your application.
+
+#This will give you the external address of the ALB. Use this address to access your application.
 
 ## Step 9: Set up DNS (Optional)
 
-If you have a domain name, you can create a CNAME record pointing to the ALB address:
-
 ```bash
+
+aws route53 create-hosted-zone \
+  --name akhileshmishra.tech \
+  --caller-reference $(date +%s) \
+  --hosted-zone-config Comment="Public hosted zone for akhileshmishra.tech"
+
+# Get the ALB DNS name from the Ingress
+ALB_DNS=$(kubectl get ingress 3-tier-app-ingress -n 3-tier-app-eks -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+echo "ALB DNS Name: $ALB_DNS"
+
+# Get the hosted zone ID for your domain
+ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name akhileshmishra.tech --query "HostedZones[0].Id" --output text | sed 's/\/hostedzone\///')
+echo "Hosted Zone ID: $ZONE_ID"
+
+# Create an A record alias pointing to the ALB
 aws route53 change-resource-record-sets \
-  --hosted-zone-id <your-hosted-zone-id> \
+  --hosted-zone-id $ZONE_ID \
   --change-batch '{
     "Changes": [
       {
         "Action": "UPSERT",
         "ResourceRecordSet": {
-          "Name": "devops-learning.yourdomain.com", 
-          "Type": "CNAME",
-          "TTL": 300,
-          "ResourceRecords": [
-            {
-              "Value": "<your-alb-address>"
-            }
-          ]
+          "Name": "app.akhileshmishra.tech",
+          "Type": "A",
+          "AliasTarget": {
+            "HostedZoneId": "Z32O12XQLNTSW2",
+            "DNSName": "'$ALB_DNS'",
+            "EvaluateTargetHealth": true
+          }
         }
       }
     ]
   }'
-```
 
-Replace `<your-hosted-zone-id>` and `<your-alb-address>` with your actual values.
-
+  ```
 ## Troubleshooting
 
 ### Check Pod Logs

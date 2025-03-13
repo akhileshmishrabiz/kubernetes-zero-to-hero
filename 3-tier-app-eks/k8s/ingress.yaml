@@ -15,8 +15,10 @@ metadata:
   annotations:
     alb.ingress.kubernetes.io/scheme: "internet-facing"
     alb.ingress.kubernetes.io/target-type: "ip"
+    alb.ingress.kubernetes.io/healthcheck-path: "/"  # This tells ALB to check /api
+    
 spec:
-  ingressClassName: "alb"
+  ingressClassName: alb
   rules:
   - http:
       paths:
