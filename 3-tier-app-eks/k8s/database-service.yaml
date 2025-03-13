@@ -10,4 +10,4 @@ spec:
   externalName:  akhilesh-postgres.cveph9nmftjh.eu-west-1.rds.amazonaws.com
   ports:
   - port: 5432
-  # postgres-db.devopsdozo.svc.cluster.local
+  # postgres-db.devopsdozo.svc.cluster.local  

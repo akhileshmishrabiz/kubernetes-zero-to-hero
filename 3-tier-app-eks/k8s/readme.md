@@ -222,13 +222,14 @@ kubectl apply -k "github.com/aws/eks-charts/stable/aws-load-balancer-controller/
 brew install helm # (for mac)
 helm repo add eks https://aws.github.io/eks-charts
 helm repo update
+VPC_ID=$(aws eks describe-cluster --name Akhilesh-cluster --region eu-west-1 --query "cluster.resourcesVpcConfig.vpcId" --output text)
 
 helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
   -n kube-system \
   --set clusterName=$cluster_name \
   --set serviceAccount.create=false \
   --set serviceAccount.name=aws-load-balancer-controller \
-  --set vpcId=vpc-22635844 \
+  --set $VPC_ID \
   --set region=eu-west-1
 
 ```
@@ -243,11 +244,23 @@ kubectl get ingress -n 3-tier-app-eks
 # After ingress creation
 kubectl logs -n kube-system -l app.kubernetes.io/name=aws-load-balancer-controller
 
-# NOte: make sure public subnet are available. and they have Key=kubernetes.io/role/elb,Value=1 tag
-aws ec2 describe-subnets --filters "Name=vpc-id,Values=vpc-22635844" --query "Subnets[*].{SubnetId:SubnetId,AvailabilityZone:AvailabilityZone,PublicIp:MapPublicIpOnLaunch,Tags:Tags}" --output table
+# VPC_ID for cluster
+VPC_ID=$(aws eks describe-cluster --name Akhilesh-cluster --region eu-west-1 --query "cluster.resourcesVpcConfig.vpcId" --output text)
 
-# For public subnets (used by internet-facing load balancers)
-aws ec2 create-tags --resources subnet-id1 subnet-id2 --tags Key=kubernetes.io/role/elb,Value=1
+# verify the vpc id
+echo $VPC_ID
+
+# Public subnets for the cluster
+aws ec2 describe-subnets --filters "Name=vpc-id,Values=$VPC_ID" "Name=map-public-ip-on-launch,Values=true" \
+--query "Subnets[*].{SubnetId:SubnetId,AvailabilityZone:AvailabilityZone,PublicIp:MapPublicIpOnLaunch}"
+
+# Get the list of subnets id's from above commands and run this
+aws ec2 create-tags --resources subnet-05c313851d6e027e0 subnet-002f8dde08d2f1643 \
+subnet-0f8aabbf5f8538d81 --tags Key=kubernetes.io/role/elb,Value=1
+
+# Verify the tags
+aws ec2 describe-subnets --subnet-ids ubnet-05c313851d6e027e0 subnet-002f8dde08d2f1643 \
+subnet-0f8aabbf5f8538d81 --query "Subnets[*].{SubnetId:SubnetId,Tags:Tags}"
 
 # For private subnets (used by internal load balancers) - if needed later
 # aws ec2 create-tags --resources subnet-id3 subnet-id4 --tags Key=kubernetes.io/role/internal-elb,Value=1
@@ -256,7 +269,7 @@ aws ec2 create-tags --resources subnet-id1 subnet-id2 --tags Key=kubernetes.io/r
 aws ec2 describe-subnets --subnet-ids subnet-id1 subnet-id2 --query "Subnets[*].{SubnetId:SubnetId,Tags:Tags}" --output table
 
 # delete and recreate ingress
-kubectl delete ingress devops-learning-ingress -n devops-learning
+kubectl delete ingress 3-tier-app-ingress -n 3-tier-app-eks --grace-period=0 --force
 kubectl apply -f k8s/ingress.yaml
 
 # check the status again
@@ -283,7 +296,7 @@ aws route53 change-resource-record-sets \
       {
         "Action": "UPSERT",
         "ResourceRecordSet": {
-          "Name": "devops-learning.yourdomain.com",
+          "Name": "devops-learning.yourdomain.com", 
           "Type": "CNAME",
           "TTL": 300,
           "ResourceRecords": [
