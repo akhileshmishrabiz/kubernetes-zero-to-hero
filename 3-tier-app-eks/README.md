@@ -23,4 +23,11 @@ docker-compose down
 
 ## start the application 
 
-docker-compose dow
+docker-compose down
+
+route53-policy.json
+
+
+
+Akhilesh-cluster
+
