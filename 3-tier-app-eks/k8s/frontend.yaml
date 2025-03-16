@@ -28,7 +28,7 @@ spec:
         - containerPort: 80
         env:
         - name: REACT_APP_API_URL
-          value: ""
+          value: "/api"
         resources:
           requests:
             memory: "128Mi"
