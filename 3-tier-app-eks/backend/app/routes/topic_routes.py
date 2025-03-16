@@ -3,7 +3,6 @@ from app.models.models import Topic
 from app.models import db
 from . import topic_bp
 
-
 @topic_bp.route('', methods=['GET'])
 def get_topics():
     topics = Topic.query.all()
