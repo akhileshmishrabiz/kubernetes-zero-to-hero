@@ -29,7 +29,8 @@ spec:
     spec:
       containers:
       - name: frontend-service
-        image: frontend-service:1.0.0
+        image: my/craftista-frontend:dev  # local image build
+        imagePullPolicy: Never # for locally building image
         ports:
         - containerPort: 3000
         volumeMounts:

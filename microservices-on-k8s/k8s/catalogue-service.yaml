@@ -3,14 +3,15 @@ kind: ConfigMap
 metadata:
   name: catalogue-config
 data:
+  app_version: "1.0.0"  # Added as a top-level key
   config.json: |
     {
       "app_version": "1.0.0",
       "data_source": "db"
     }
   db-config.properties: |
-    db_name=catalogue
-    db_host=catalogue-db.your-rds-endpoint.region.rds.amazonaws.com
+    db_name=craftdb
+    db_host=craftdb.cfykukwcw419.ap-south-1.rds.amazonaws.com
 ---
 apiVersion: v1
 kind: Secret
@@ -41,23 +42,46 @@ spec:
       initContainers:
       - name: init-db-credentials
         image: amazon/aws-cli:latest
-        command:
+        command:  
         - /bin/sh
         - -c
         - |
-          aws secretsmanager get-secret-value --secret-id catalogue-db-credentials --region us-east-1 --query SecretString --output text > /tmp/secrets/db-credentials.json
-          cat /tmp/secrets/db-credentials.json | jq -r '.username' > /tmp/secrets/db_user
-          cat /tmp/secrets/db-credentials.json | jq -r '.password' > /tmp/secrets/db_password
-          cat /tmp/secrets/db-credentials.json | jq -r '.host' > /tmp/secrets/db_host
+          mkdir -p /tmp/secrets
+          echo "Attempting to fetch secret from AWS Secrets Manager..."
+          aws secretsmanager get-secret-value --secret-id $DB_SECRET --region $AWS_REGION --query SecretString --output text > /tmp/secrets/db-credentials.json
+          
+          if [ $? -eq 0 ]; then
+            echo "Secret retrieved successfully"
+            echo "Parsing secret values..."
+            cat /tmp/secrets/db-credentials.json | jq -r '.username' > /tmp/secrets/db_user
+            cat /tmp/secrets/db-credentials.json | jq -r '.password' > /tmp/secrets/db_password
+            echo "Credentials extracted successfully"
+          else
+            echo "Failed to retrieve secret, check AWS credentials and secret name"
+            exit 1
+          fi
         volumeMounts:
         - name: secrets-store
           mountPath: /tmp/secrets
         env:
         - name: AWS_REGION
-          value: "us-east-1"
+          value: "ap-south-1"
+        - name: DB_SECRET
+          value: "db/craftdb"
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: aws_access_key_id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: aws_secret_access_key
       containers:
       - name: catalogue-service
-        image: catalogue-service:1.0.0
+        image: my/craftista-catalogue:dev
+        imagePullPolicy: Never # for locally building image
         ports:
         - containerPort: 5000
         env:
