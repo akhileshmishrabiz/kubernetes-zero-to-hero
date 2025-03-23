@@ -1,10 +1,9 @@
-name: Build, Push, and Update ArgoCD Manifests
+name: Build, Push with, and Update ArgoCD
 
 on:
   push:
     branches:
       - argo-dev
-
   workflow_dispatch:
     inputs:
       build_catalogue:
