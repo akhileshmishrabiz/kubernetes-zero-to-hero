@@ -80,8 +80,8 @@ spec:
               key: aws_secret_access_key
       containers:
       - name: catalogue-service
-        image: my/craftista-catalogue:dev
-        imagePullPolicy: Never # for locally building image
+        image: livingdevopswithakhilesh/microservices:catalogue-latest
+        imagePullPolicy: Always # for locally building image
         ports:
         - containerPort: 5000
         env:

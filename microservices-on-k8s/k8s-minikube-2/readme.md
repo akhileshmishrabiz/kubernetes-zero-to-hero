@@ -44,7 +44,10 @@ minikube addons enable ingress
 
 ### 2. use the Service Images from dockerhub
 # 
-
+✅ Catalogue: livingdevopswithakhilesh/microservices:catalogue-latest
+✅ Frontend: livingdevopswithakhilesh/microservices:frontend-latest
+✅ Recommendation: livingdevopswithakhilesh/microservices:recommendation-latest
+✅ Voting: livingdevopswithakhilesh/microservices:voting-latest
 
 ### 3. Create AWS Credentials Secret
 
@@ -61,7 +64,7 @@ Deploy all services in order:
 
 ```bash
 # Apply deployment files
-cd k8s-minikube-1/
+cd k8s-minikube-2/
 kubectl apply -f catalogue-service.yaml
 kubectl apply -f recommendation-service.yaml
 kubectl apply -f voting-service.yaml
