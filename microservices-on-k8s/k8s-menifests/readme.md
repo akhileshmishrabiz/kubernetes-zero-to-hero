@@ -111,3 +111,12 @@ kubectl logs -n craftista deploy/voting-service
 kubectl get configmaps -n craftista
 kubectl get secrets -n craftista
 ```
+
+
+4. fix the aws creds issue 
+```bash
+kubectl create secret generic aws-credentials \
+  --from-literal=aws_access_key_id=AWS_ACCESS_KEY \
+  --from-literal=aws_secret_access_key=AWS_SECERT_KEY \
+  -n craftista
+```
