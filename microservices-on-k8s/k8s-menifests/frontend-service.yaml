@@ -11,6 +11,11 @@ data:
       "recommendationBaseUri": "http://recco:8080",
       "votingBaseUri": "http://voting:8080"
     }
+spec:
+  template:
+    spec:
+      containers:
+        - image: livingdevopswithakhilesh/microservices:frontend-644625f8de627843afd6fc916bc30459705c2726
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -30,38 +35,38 @@ spec:
         app: frontend-service
     spec:
       containers:
-      - name: frontend-service
-        image: livingdevopswithakhilesh/microservices:frontend-d2760adff9994b633db068b7f7b724098ab78a60
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 3000
-        volumeMounts:
-        - name: config-volume
-          mountPath: /app/config.json
-          subPath: config.json
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "200m"
-        livenessProbe:
-          httpGet:
-            path: /api/service-status
-            port: 3000
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /api/service-status
-            port: 3000
-          initialDelaySeconds: 5
-          periodSeconds: 5
+        - name: frontend-service
+          image: livingdevopswithakhilesh/microservices:frontend-644625f8de627843afd6fc916bc30459705c2726
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/config.json
+              subPath: config.json
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              path: /api/service-status
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/service-status
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
       volumes:
-      - name: config-volume
-        configMap:
-          name: frontend-config
+        - name: config-volume
+          configMap:
+            name: frontend-config
 ---
 apiVersion: v1
 kind: Service
@@ -72,6 +77,10 @@ spec:
   selector:
     app: frontend-service
   ports:
-  - port: 80
-    targetPort: 3000
+    - port: 80
+      targetPort: 3000
   type: ClusterIP
+  template:
+    spec:
+      containers:
+        - image: livingdevopswithakhilesh/microservices:frontend-644625f8de627843afd6fc916bc30459705c2726

@@ -22,6 +22,11 @@ data:
     spring.jpa.show-sql=true
     spring.jpa.hibernate.ddl-auto=update
     spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect
+spec:
+  template:
+    spec:
+      containers:
+        - image: livingdevopswithakhilesh/microservices:voting-644625f8de627843afd6fc916bc30459705c2726
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -41,38 +46,38 @@ spec:
         app: voting-service
     spec:
       containers:
-      - name: voting-service
-        image: livingdevopswithakhilesh/microservices:voting-d2760adff9994b633db068b7f7b724098ab78a60
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8080
-        volumeMounts:
-        - name: config-volume
-          mountPath: /app/application.properties
-          subPath: application.properties
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "200m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /api/origamis
-            port: 8080
-          initialDelaySeconds: 60
-          periodSeconds: 15
-        readinessProbe:
-          httpGet:
-            path: /api/origamis
-            port: 8080
-          initialDelaySeconds: 30
-          periodSeconds: 10
+        - name: voting-service
+          image: livingdevopswithakhilesh/microservices:voting-644625f8de627843afd6fc916bc30459705c2726
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/application.properties
+              subPath: application.properties
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /api/origamis
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /api/origamis
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
       volumes:
-      - name: config-volume
-        configMap:
-          name: voting-config
+        - name: config-volume
+          configMap:
+            name: voting-config
 ---
 apiVersion: v1
 kind: Service
@@ -83,6 +88,10 @@ spec:
   selector:
     app: voting-service
   ports:
-  - port: 8080
-    targetPort: 8080
+    - port: 8080
+      targetPort: 8080
   type: ClusterIP
+  template:
+    spec:
+      containers:
+        - image: livingdevopswithakhilesh/microservices:voting-644625f8de627843afd6fc916bc30459705c2726
