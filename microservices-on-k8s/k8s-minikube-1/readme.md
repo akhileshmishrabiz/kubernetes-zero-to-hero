@@ -1,4 +1,7 @@
-# Craftista Microservices - Kubernetes Deployment Guide
+# Craftista Microservices - Kubernetes Deployment on minikube with local image build
+# minikube should be installed on linux machines for this to work
+
+
 
 This guide explains how to deploy and test the Craftista Origami application on Kubernetes.
 
@@ -9,6 +12,24 @@ This guide explains how to deploy and test the Craftista Origami application on 
 - Docker for building images
 
 ## Deployment Process
+
+# Create github codespace or use a linux machine
+
+```bash
+# install kubctl
+https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html
+curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.29.0/2024-01-04/bin/linux/amd64/kubectl
+
+Install minikube
+curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+
+sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+
+start minikube cluster
+minikube start
+
+minikube status
+```
 
 ### 1. Start Minikube
 
@@ -41,6 +62,14 @@ docker build -t my/craftista-voting:dev .
 
 cd ../frontend
 docker build -t my/craftista-frontend:dev .
+
+## Load images to minikube env
+minikube image load my/craftista-voting:dev
+minikube image load my/craftista-catalogue:dev
+minikube image load my/craftista-recco:dev
+minikube image load my/craftista-frontend:dev
+
+
 ```
 
 ### 3. Create AWS Credentials Secret
@@ -48,8 +77,8 @@ docker build -t my/craftista-frontend:dev .
 ```bash
 # Create AWS credentials secret (replace with your actual credentials)
 kubectl create secret generic aws-credentials \
-  --from-literal=aws_access_key_id=YOUR_ACCESS_KEY \
-  --from-literal=aws_secret_access_key=YOUR_SECRET_KEY
+  --from-literal=aws_access_key_id=aws_access_key \
+  --from-literal=aws_secret_access_key=aws_secret_key
 ```
 
 ### 4. Deploy Services
@@ -58,11 +87,12 @@ Deploy all services in order:
 
 ```bash
 # Apply deployment files
-cd k8s
+cd k8s-minikube-1/
 kubectl apply -f catalogue-service.yaml
 kubectl apply -f recommendation-service.yaml
 kubectl apply -f voting-service.yaml
 kubectl apply -f frontend-service.yaml
+kubectl apply -f 
 ```
 
 ### 5. Deploy Ingress
@@ -95,6 +125,9 @@ pkill -f "kubectl port-forward"
 #### Option B: Test with Ingress
 
 ```bash
+
+minikube addons enable ingress
+
 # Get Minikube IP
 minikube ip
 
@@ -156,4 +189,18 @@ kubectl delete -f voting-service.yaml
 kubectl delete -f recommendation-service.yaml
 kubectl delete -f catalogue-service.yaml
 kubectl delete secret aws-credentials
+```
+
+
+
+temp:
+
+192.168.49.2
+craftista.local
+
+
+```bash
+# nslookup install
+sudo apt-get update
+sudo apt-get install dnsutils
 ```
