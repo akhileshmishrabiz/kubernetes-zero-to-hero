@@ -26,8 +26,8 @@ spec:
     spec:
       containers:
       - name: recommendation-service
-        image: my/craftista-recco:dev  # local image build
-        imagePullPolicy: Never # to use local image only
+        image: livingdevopswithakhilesh/microservices:recommendation-latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
         volumeMounts:

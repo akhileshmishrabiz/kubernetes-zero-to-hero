@@ -29,8 +29,8 @@ spec:
     spec:
       containers:
       - name: frontend-service
-        image: my/craftista-frontend:dev  # local image build
-        imagePullPolicy: Never # for locally building image
+        image: livingdevopswithakhilesh/microservices:frontend-latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 3000
         volumeMounts:
@@ -72,21 +72,3 @@ spec:
   - port: 80
     targetPort: 3000
   type: ClusterIP
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: frontend-ingress
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-spec:
-  rules:
-  - http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: frontend
-            port:
-              number: 80
