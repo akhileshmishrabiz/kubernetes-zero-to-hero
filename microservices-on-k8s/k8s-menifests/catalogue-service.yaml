@@ -2,27 +2,24 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: catalogue-config
-  namespace: craftista
 data:
-  app_version: "1.0.0"
+  app_version: "1.0.0"  # Added as a top-level key
   config.json: |
     {
       "app_version": "1.0.0",
-      "data_source": "json",
-      "db_host": "catalogue-db",
-      "db_name": "catalogue",
-      "db_user": "devops",
-      "db_password": "devops"
+      "data_source": "db"
     }
+  db-config.properties: |
+    db_name=catalougedb
+    db_host=microservices-db.cfykukwcw419.ap-south-1.rds.amazonaws.com
 ---
 apiVersion: v1
 kind: Secret
 metadata:
   name: catalogue-db-secrets
-  namespace: craftista
 type: Opaque
 data:
-  # Base64 encoded values 
+  # Base64 encoded values - replace with actual encoded values
   db_user: ZGV2b3Bz    # 'devops' in base64
   db_password: ZGV2b3Bz # 'devops' in base64
 ---
@@ -30,7 +27,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: catalogue-service
-  namespace: craftista
   labels:
     app: catalogue-service
 spec:
@@ -43,10 +39,49 @@ spec:
       labels:
         app: catalogue-service
     spec:
+      initContainers:
+      - name: init-db-credentials
+        image: amazon/aws-cli:latest
+        command:  
+        - /bin/sh
+        - -c
+        - |
+          mkdir -p /tmp/secrets
+          echo "Attempting to fetch secret from AWS Secrets Manager..."
+          aws secretsmanager get-secret-value --secret-id $DB_SECRET --region $AWS_REGION --query SecretString --output text > /tmp/secrets/db-credentials.json
+          
+          if [ $? -eq 0 ]; then
+            echo "Secret retrieved successfully"
+            echo "Parsing secret values..."
+            cat /tmp/secrets/db-credentials.json | jq -r '.username' > /tmp/secrets/db_user
+            cat /tmp/secrets/db-credentials.json | jq -r '.password' > /tmp/secrets/db_password
+            echo "Credentials extracted successfully"
+          else
+            echo "Failed to retrieve secret, check AWS credentials and secret name"
+            exit 1
+          fi
+        volumeMounts:
+        - name: secrets-store
+          mountPath: /tmp/secrets
+        env:
+        - name: AWS_REGION
+          value: "ap-south-1"
+        - name: DB_SECRET
+          value: "app/microservices"
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: aws_access_key_id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: aws_secret_access_key
       containers:
       - name: catalogue-service
         image: livingdevopswithakhilesh/microservices:catalogue-latest
-        imagePullPolicy: Always
+        imagePullPolicy: Always 
         ports:
         - containerPort: 5000
         env:
@@ -65,12 +100,15 @@ spec:
             configMapKeyRef:
               name: catalogue-config
               key: app_version
-        - name: DATA_SOURCE
-          value: "json"
         volumeMounts:
         - name: config-volume
           mountPath: /app/config.json
           subPath: config.json
+        - name: db-config-volume
+          mountPath: /app/db-config
+        - name: secrets-store
+          mountPath: /app/secrets
+          readOnly: true
         resources:
           requests:
             memory: "128Mi"
@@ -97,12 +135,20 @@ spec:
           items:
           - key: config.json
             path: config.json
+      - name: db-config-volume
+        configMap:
+          name: catalogue-config
+          items:
+          - key: db-config.properties
+            path: db-config.properties
+      - name: secrets-store
+        emptyDir:
+          medium: Memory
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: catalogue
-  namespace: craftista
 spec:
   selector:
     app: catalogue-service
