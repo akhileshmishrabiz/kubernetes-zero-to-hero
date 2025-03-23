@@ -163,3 +163,36 @@ kubectl delete -f recommendation-service.yaml
 kubectl delete -f catalogue-service.yaml
 kubectl delete secret aws-credentials
 ```
+
+
+## Argo deploy
+```bash
+# Clone your existing repository
+git clone https://github.com/akhileshmishrabiz/kubernetes-zero-to-hero.git
+cd kubernetes-zero-to-hero
+
+# Create a new branch for ArgoCD deployments
+git checkout -b argo-deploy-dev
+git push origin argo-deploy-dev
+
+# Create ArgoCD namespace
+kubectl create namespace argocd
+
+# Apply the ArgoCD installation manifest
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+# Wait for ArgoCD pods to be ready
+kubectl wait --for=condition=Ready pods --all -n argocd --timeout=300s
+
+# Port-forward the ArgoCD server
+kubectl port-forward svc/argocd-server -n argocd 8080:443 &
+
+# Get the initial admin password
+ARGO_PWD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
+echo "ArgoCD Initial Password: $ARGO_PWD"
+
+# Access ArgoCD UI at: https://localhost:8080
+# Username: admin
+# Password: use the output from above command
+
+```

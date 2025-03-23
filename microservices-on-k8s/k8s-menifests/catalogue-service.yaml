@@ -1,0 +1,112 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: catalogue-config
+  namespace: craftista
+data:
+  app_version: "1.0.0"
+  config.json: |
+    {
+      "app_version": "1.0.0",
+      "data_source": "json",
+      "db_host": "catalogue-db",
+      "db_name": "catalogue",
+      "db_user": "devops",
+      "db_password": "devops"
+    }
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: catalogue-db-secrets
+  namespace: craftista
+type: Opaque
+data:
+  # Base64 encoded values 
+  db_user: ZGV2b3Bz    # 'devops' in base64
+  db_password: ZGV2b3Bz # 'devops' in base64
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalogue-service
+  namespace: craftista
+  labels:
+    app: catalogue-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: catalogue-service
+  template:
+    metadata:
+      labels:
+        app: catalogue-service
+    spec:
+      containers:
+      - name: catalogue-service
+        image: livingdevopswithakhilesh/microservices:catalogue-latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+        env:
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: catalogue-db-secrets
+              key: db_user
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: catalogue-db-secrets
+              key: db_password
+        - name: APP_VERSION
+          valueFrom:
+            configMapKeyRef:
+              name: catalogue-config
+              key: app_version
+        - name: DATA_SOURCE
+          value: "json"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config.json
+          subPath: config.json
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: config-volume
+        configMap:
+          name: catalogue-config
+          items:
+          - key: config.json
+            path: config.json
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalogue
+  namespace: craftista
+spec:
+  selector:
+    app: catalogue-service
+  ports:
+  - port: 5000
+    targetPort: 5000
+  type: ClusterIP

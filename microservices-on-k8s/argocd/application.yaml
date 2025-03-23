@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: craftista
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/akhileshmishrabiz/kubernetes-zero-to-hero.git  # Replace with your actual repo URL
+    targetRevision: argo-dev
+    path: microservices-on-k8s/k8s-menifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: craftista
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
