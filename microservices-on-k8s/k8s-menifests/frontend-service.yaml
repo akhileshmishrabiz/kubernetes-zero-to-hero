@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
       - name: frontend-service
-        image: livingdevopswithakhilesh/microservices:frontend-latest
+        image: livingdevopswithakhilesh/microservices:frontend-d2760adff9994b633db068b7f7b724098ab78a60
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
