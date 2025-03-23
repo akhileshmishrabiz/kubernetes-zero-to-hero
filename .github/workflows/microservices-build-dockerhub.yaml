@@ -1,8 +1,8 @@
 name: Build and Push Microservices
 
 on:
-  push:
-    branches: [ main, master ]
+  # push:
+  #   branches: [ main ]
   workflow_dispatch:
 
 env:
