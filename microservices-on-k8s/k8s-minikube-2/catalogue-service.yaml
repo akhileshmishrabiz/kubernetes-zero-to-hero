@@ -10,8 +10,8 @@ data:
       "data_source": "db"
     }
   db-config.properties: |
-    db_name=craftdb
-    db_host=craftdb.cfykukwcw419.ap-south-1.rds.amazonaws.com
+    db_name=catalougedb
+    db_host=microservices-db.cfykukwcw419.ap-south-1.rds.amazonaws.com
 ---
 apiVersion: v1
 kind: Secret
@@ -67,7 +67,7 @@ spec:
         - name: AWS_REGION
           value: "ap-south-1"
         - name: DB_SECRET
-          value: "db/craftdb"
+          value: "app/microservices"
         - name: AWS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
@@ -81,7 +81,7 @@ spec:
       containers:
       - name: catalogue-service
         image: livingdevopswithakhilesh/microservices:catalogue-latest
-        imagePullPolicy: Always # for locally building image
+        imagePullPolicy: Always 
         ports:
         - containerPort: 5000
         env:
