@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: catalogue-config
 data:
-  app_version: "1.0.0" # Added as a top-level key
+  app_version: "1.0.0"  # Added as a top-level key
   config.json: |
     {
       "app_version": "1.0.0",
@@ -12,11 +12,6 @@ data:
   db-config.properties: |
     db_name=catalougedb
     db_host=microservices-db.cfykukwcw419.ap-south-1.rds.amazonaws.com
-spec:
-  template:
-    spec:
-      containers:
-        - image: livingdevopswithakhilesh/microservices:catalogue-644625f8de627843afd6fc916bc30459705c2726
 ---
 apiVersion: v1
 kind: Secret
@@ -25,13 +20,8 @@ metadata:
 type: Opaque
 data:
   # Base64 encoded values - replace with actual encoded values
-  db_user: ZGV2b3Bz # 'devops' in base64
+  db_user: ZGV2b3Bz    # 'devops' in base64
   db_password: ZGV2b3Bz # 'devops' in base64
-spec:
-  template:
-    spec:
-      containers:
-        - image: livingdevopswithakhilesh/microservices:catalogue-644625f8de627843afd6fc916bc30459705c2726
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -50,110 +40,110 @@ spec:
         app: catalogue-service
     spec:
       initContainers:
-        - name: init-db-credentials
-          image: amazon/aws-cli:latest
-          command:
-            - /bin/sh
-            - -c
-            - |
-              mkdir -p /tmp/secrets
-              echo "Attempting to fetch secret from AWS Secrets Manager..."
-              aws secretsmanager get-secret-value --secret-id $DB_SECRET --region $AWS_REGION --query SecretString --output text > /tmp/secrets/db-credentials.json
-
-              if [ $? -eq 0 ]; then
-                echo "Secret retrieved successfully"
-                echo "Parsing secret values..."
-                cat /tmp/secrets/db-credentials.json | jq -r '.username' > /tmp/secrets/db_user
-                cat /tmp/secrets/db-credentials.json | jq -r '.password' > /tmp/secrets/db_password
-                echo "Credentials extracted successfully"
-              else
-                echo "Failed to retrieve secret, check AWS credentials and secret name"
-                exit 1
-              fi
-          volumeMounts:
-            - name: secrets-store
-              mountPath: /tmp/secrets
-          env:
-            - name: AWS_REGION
-              value: "ap-south-1"
-            - name: DB_SECRET
-              value: "app/microservices"
-            - name: AWS_ACCESS_KEY_ID
-              valueFrom:
-                secretKeyRef:
-                  name: aws-credentials
-                  key: aws_access_key_id
-            - name: AWS_SECRET_ACCESS_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: aws-credentials
-                  key: aws_secret_access_key
-      containers:
-        - name: catalogue-service
-          image: livingdevopswithakhilesh/microservices:catalogue-644625f8de627843afd6fc916bc30459705c2726
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 5000
-          env:
-            - name: DB_USER
-              valueFrom:
-                secretKeyRef:
-                  name: catalogue-db-secrets
-                  key: db_user
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: catalogue-db-secrets
-                  key: db_password
-            - name: APP_VERSION
-              valueFrom:
-                configMapKeyRef:
-                  name: catalogue-config
-                  key: app_version
-          volumeMounts:
-            - name: config-volume
-              mountPath: /app/config.json
-              subPath: config.json
-            - name: db-config-volume
-              mountPath: /app/db-config
-            - name: secrets-store
-              mountPath: /app/secrets
-              readOnly: true
-          resources:
-            requests:
-              memory: "128Mi"
-              cpu: "100m"
-            limits:
-              memory: "256Mi"
-              cpu: "200m"
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 5000
-            initialDelaySeconds: 30
-            periodSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 5000
-            initialDelaySeconds: 5
-            periodSeconds: 5
-      volumes:
-        - name: config-volume
-          configMap:
-            name: catalogue-config
-            items:
-              - key: config.json
-                path: config.json
-        - name: db-config-volume
-          configMap:
-            name: catalogue-config
-            items:
-              - key: db-config.properties
-                path: db-config.properties
+      - name: init-db-credentials
+        image: amazon/aws-cli:latest
+        command:  
+        - /bin/sh
+        - -c
+        - |
+          mkdir -p /tmp/secrets
+          echo "Attempting to fetch secret from AWS Secrets Manager..."
+          aws secretsmanager get-secret-value --secret-id $DB_SECRET --region $AWS_REGION --query SecretString --output text > /tmp/secrets/db-credentials.json
+          
+          if [ $? -eq 0 ]; then
+            echo "Secret retrieved successfully"
+            echo "Parsing secret values..."
+            cat /tmp/secrets/db-credentials.json | jq -r '.username' > /tmp/secrets/db_user
+            cat /tmp/secrets/db-credentials.json | jq -r '.password' > /tmp/secrets/db_password
+            echo "Credentials extracted successfully"
+          else
+            echo "Failed to retrieve secret, check AWS credentials and secret name"
+            exit 1
+          fi
+        volumeMounts:
         - name: secrets-store
-          emptyDir:
-            medium: Memory
+          mountPath: /tmp/secrets
+        env:
+        - name: AWS_REGION
+          value: "ap-south-1"
+        - name: DB_SECRET
+          value: "app/microservices"
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: aws_access_key_id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: aws_secret_access_key
+      containers:
+      - name: catalogue-service
+        image: livingdevopswithakhilesh/microservices:catalogue-644625f8de627843afd6fc916bc30459705c2726
+        imagePullPolicy: Always 
+        ports:
+        - containerPort: 5000
+        env:
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: catalogue-db-secrets
+              key: db_user
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: catalogue-db-secrets
+              key: db_password
+        - name: APP_VERSION
+          valueFrom:
+            configMapKeyRef:
+              name: catalogue-config
+              key: app_version
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config.json
+          subPath: config.json
+        - name: db-config-volume
+          mountPath: /app/db-config
+        - name: secrets-store
+          mountPath: /app/secrets
+          readOnly: true
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: config-volume
+        configMap:
+          name: catalogue-config
+          items:
+          - key: config.json
+            path: config.json
+      - name: db-config-volume
+        configMap:
+          name: catalogue-config
+          items:
+          - key: db-config.properties
+            path: db-config.properties
+      - name: secrets-store
+        emptyDir:
+          medium: Memory
 ---
 apiVersion: v1
 kind: Service
@@ -163,10 +153,6 @@ spec:
   selector:
     app: catalogue-service
   ports:
-    - port: 5000
-      targetPort: 5000
+  - port: 5000
+    targetPort: 5000
   type: ClusterIP
-  template:
-    spec:
-      containers:
-        - image: livingdevopswithakhilesh/microservices:catalogue-644625f8de627843afd6fc916bc30459705c2726
