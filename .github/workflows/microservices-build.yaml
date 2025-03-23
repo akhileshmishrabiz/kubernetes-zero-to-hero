@@ -1,22 +1,48 @@
-name: Build all and and Push -> dockerhub
+name: Build, Push with, and Update ArgoCD
 
 on:
   push:
-    # branches:
-    #   - main
-
+    branches:
+      - argo-dev
   workflow_dispatch:
+    inputs:
+      build_catalogue:
+        description: 'Build Catalogue Service'
+        type: boolean
+        default: true
+      build_frontend:
+        description: 'Build Frontend Service'
+        type: boolean
+        default: true
+      build_recommendation:
+        description: 'Build Recommendation Service'
+        type: boolean
+        default: true
+      build_voting:
+        description: 'Build Voting Service'
+        type: boolean
+        default: true
+      build_all:
+        description: 'Build All Services'
+        type: boolean
+        default: true
 
 env:
   DOCKERHUB_USERNAME: livingdevopswithakhilesh
-  DOCKERHUB_REPO: livingdevopswithakhilesh/craftista
+  DOCKERHUB_REPO: livingdevopswithakhilesh/microservices
+  MANIFESTS_PATH: microservices-on-k8s/k8s-menifests
+  GIT_USERNAME: github-actions
+  GIT_EMAIL: github-actions@github.com
 
 jobs:
-  build-push-all:
+  build-push-update:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          ref: argo-dev
+          token: ${{ secrets.GH_PAT }}
         
       - name: Login to DockerHub
         uses: docker/login-action@v2
@@ -24,47 +50,152 @@ jobs:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PAT }}
       
+      - name: Set up QEMU for multi-arch builds
+        uses: docker/setup-qemu-action@v2
+      
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       
-      # Build Catalogue Service
+      # Process manual build flags
+      - name: Process build flags
+        id: build_flags
+        run: |
+          if [[ "${{ github.event.inputs.build_all }}" == "true" ]]; then
+            echo "build_catalogue=true" >> $GITHUB_OUTPUT
+            echo "build_frontend=true" >> $GITHUB_OUTPUT
+            echo "build_recommendation=true" >> $GITHUB_OUTPUT
+            echo "build_voting=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_catalogue=${{ github.event.inputs.build_catalogue }}" >> $GITHUB_OUTPUT
+            echo "build_frontend=${{ github.event.inputs.build_frontend }}" >> $GITHUB_OUTPUT
+            echo "build_recommendation=${{ github.event.inputs.build_recommendation }}" >> $GITHUB_OUTPUT
+            echo "build_voting=${{ github.event.inputs.build_voting }}" >> $GITHUB_OUTPUT
+          fi
+      
+      # Build multi-architecture Catalogue Service
       - name: Build and push Catalogue
+        if: steps.build_flags.outputs.build_catalogue == 'true'
         uses: docker/build-push-action@v4
         with:
           context: ./microservices-on-k8s/catalogue
+          platforms: linux/amd64,linux/arm64
           push: true
-          # tags: ${{ env.DOCKERHUB_REPO }}:catalogue-latest
-          tags: ${{ env.DOCKERHUB_REPO }}:catalogue-${{ github.sha }}
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:catalogue-latest
+            ${{ env.DOCKERHUB_REPO }}:catalogue-${{ github.sha }}
       
-      # Build Frontend Service
+      # Build multi-architecture Frontend Service
       - name: Build and push Frontend
+        if: steps.build_flags.outputs.build_frontend == 'true'
         uses: docker/build-push-action@v4
         with:
           context: ./microservices-on-k8s/frontend
+          platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ env.DOCKERHUB_REPO }}:frontend-${{ github.sha }}
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:frontend-latest
+            ${{ env.DOCKERHUB_REPO }}:frontend-${{ github.sha }}
       
-      # Build Recommendation Service
+      # Build multi-architecture Recommendation Service
       - name: Build and push Recommendation
+        if: steps.build_flags.outputs.build_recommendation == 'true'
         uses: docker/build-push-action@v4
         with:
           context: ./microservices-on-k8s/recommendation
+          platforms: linux/amd64
           push: true
-          tags: ${{ env.DOCKERHUB_REPO }}:recommendation-${{ github.sha }}
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:recommendation-latest
+            ${{ env.DOCKERHUB_REPO }}:recommendation-${{ github.sha }}
       
-      # Build Voting Service
+      # Build multi-architecture Voting Service
       - name: Build and push Voting
+        if: steps.build_flags.outputs.build_voting == 'true'
         uses: docker/build-push-action@v4
         with:
           context: ./microservices-on-k8s/voting
+          platforms: linux/amd64
           push: true
-          tags: ${{ env.DOCKERHUB_REPO }}:voting-${{ github.sha }}
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:voting-latest
+            ${{ env.DOCKERHUB_REPO }}:voting-${{ github.sha }}
+      
+      - name: Install yq for YAML manipulation
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+      
+      # Update Kubernetes manifests with new image tags
+      - name: Update image tags in Kubernetes manifests
+        run: |
+          if [[ "${{ steps.build_flags.outputs.build_catalogue }}" == "true" ]]; then
+            echo "Updating catalogue-service.yaml"
+            yq e -i '.spec.template.spec.containers[0].image = "${{ env.DOCKERHUB_REPO }}:catalogue-${{ github.sha }}"' ${{ env.MANIFESTS_PATH }}/catalogue-service.yaml
+          fi
+          
+          if [[ "${{ steps.build_flags.outputs.build_frontend }}" == "true" ]]; then
+            echo "Updating frontend-service.yaml"
+            yq e -i '.spec.template.spec.containers[0].image = "${{ env.DOCKERHUB_REPO }}:frontend-${{ github.sha }}"' ${{ env.MANIFESTS_PATH }}/frontend-service.yaml
+          fi
+          
+          if [[ "${{ steps.build_flags.outputs.build_recommendation }}" == "true" ]]; then
+            echo "Updating recommendation-service.yaml"
+            yq e -i '.spec.template.spec.containers[0].image = "${{ env.DOCKERHUB_REPO }}:recommendation-${{ github.sha }}"' ${{ env.MANIFESTS_PATH }}/recommendation-service.yaml
+          fi
+          
+          if [[ "${{ steps.build_flags.outputs.build_voting }}" == "true" ]]; then
+            echo "Updating voting-service.yaml"
+            yq e -i '.spec.template.spec.containers[0].image = "${{ env.DOCKERHUB_REPO }}:voting-${{ github.sha }}"' ${{ env.MANIFESTS_PATH }}/voting-service.yaml
+          fi
+      
+      # Commit the changes back to the repository
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "${{ env.GIT_USERNAME }}"
+          git config --global user.email "${{ env.GIT_EMAIL }}"
+          
+          git add ${{ env.MANIFESTS_PATH }}/*.yaml
+          
+          # Only commit if there are changes
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update image tags to ${{ github.sha }} for multi-arch support"
+            
+            # Use token for authentication when pushing
+            git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/akhileshmishrabiz/kubernetes-zero-to-hero.git
+            git push origin argo-dev
+          fi
       
       - name: Generate build summary
         run: |
-          echo "# Microservices Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "# Microservices Build and Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ **Catalogue**: ${{ env.DOCKERHUB_REPO }}:catalogue-latest" >> $GITHUB_STEP_SUMMARY
-          echo "✅ **Frontend**: ${{ env.DOCKERHUB_REPO }}:frontend-latest" >> $GITHUB_STEP_SUMMARY
-          echo "✅ **Recommendation**: ${{ env.DOCKERHUB_REPO }}:recommendation-latest" >> $GITHUB_STEP_SUMMARY
-          echo "✅ **Voting**: ${{ env.DOCKERHUB_REPO }}:voting-latest" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ steps.build_flags.outputs.build_catalogue }}" == "true" ]]; then
+            echo "✅ **Catalogue**: ${{ env.DOCKERHUB_REPO }}:catalogue-${{ github.sha }} (multi-arch: amd64, arm64)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⏭️ **Catalogue**: Skipped build" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "${{ steps.build_flags.outputs.build_frontend }}" == "true" ]]; then
+            echo "✅ **Frontend**: ${{ env.DOCKERHUB_REPO }}:frontend-${{ github.sha }} (multi-arch: amd64, arm64)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⏭️ **Frontend**: Skipped build" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "${{ steps.build_flags.outputs.build_recommendation }}" == "true" ]]; then
+            echo "✅ **Recommendation**: ${{ env.DOCKERHUB_REPO }}:recommendation-${{ github.sha }} (multi-arch: amd64, arm64)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⏭️ **Recommendation**: Skipped build" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "${{ steps.build_flags.outputs.build_voting }}" == "true" ]]; then
+            echo "✅ **Voting**: ${{ env.DOCKERHUB_REPO }}:voting-${{ github.sha }} (multi-arch: amd64, arm64)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⏭️ **Voting**: Skipped build" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "ArgoCD will automatically sync these changes to your Kubernetes cluster." >> $GITHUB_STEP_SUMMARY
+          echo "All images now support both AMD64 and ARM64 architectures." >> $GITHUB_STEP_SUMMARY

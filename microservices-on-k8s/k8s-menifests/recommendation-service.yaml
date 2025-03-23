@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
       - name: recommendation-service
-        image: livingdevopswithakhilesh/microservices:recommendation-latest
+        image: livingdevopswithakhilesh/microservices:recommendation-644625f8de627843afd6fc916bc30459705c2726
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
