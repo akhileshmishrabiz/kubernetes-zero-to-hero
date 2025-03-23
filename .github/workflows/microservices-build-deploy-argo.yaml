@@ -1,0 +1,116 @@
+name: Build, Push, and Update ArgoCD Manifests
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+env:
+  DOCKERHUB_USERNAME: livingdevopswithakhilesh
+  DOCKERHUB_REPO: livingdevopswithakhilesh/microservices
+  MANIFESTS_PATH: microservices-on-k8s/k8s-menifests
+  GIT_USERNAME: github-actions
+  GIT_EMAIL: github-actions@github.com
+
+jobs:
+  build-push-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: argo-dev
+        
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PAT }}
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      # Build Catalogue Service
+      - name: Build and push Catalogue
+        uses: docker/build-push-action@v4
+        with:
+          context: ./microservices-on-k8s/catalogue
+          push: true
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:catalogue-${{ github.sha }}
+      
+      # Build Frontend Service
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v4
+        with:
+          context: ./microservices-on-k8s/frontend
+          push: true
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:frontend-${{ github.sha }}
+      
+      # Build Recommendation Service
+      - name: Build and push Recommendation
+        uses: docker/build-push-action@v4
+        with:
+          context: ./microservices-on-k8s/recommendation
+          push: true
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:recommendation-${{ github.sha }}
+      
+      # Build Voting Service
+      - name: Build and push Voting
+        uses: docker/build-push-action@v4
+        with:
+          context: ./microservices-on-k8s/voting
+          push: true
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:voting-${{ github.sha }}
+      
+      - name: Install yq for YAML manipulation
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+      
+      # Update Kubernetes manifests with new image tags
+      - name: Update image tags in Kubernetes manifests
+        run: |
+          # Update catalogue-service.yaml
+          yq e -i '.spec.template.spec.containers[0].image = "${{ env.DOCKERHUB_REPO }}:catalogue-${{ github.sha }}"' ${{ env.MANIFESTS_PATH }}/catalogue-service.yaml
+          
+          # Update frontend-service.yaml
+          yq e -i '.spec.template.spec.containers[0].image = "${{ env.DOCKERHUB_REPO }}:frontend-${{ github.sha }}"' ${{ env.MANIFESTS_PATH }}/frontend-service.yaml
+          
+          # Update recommendation-service.yaml
+          yq e -i '.spec.template.spec.containers[0].image = "${{ env.DOCKERHUB_REPO }}:recommendation-${{ github.sha }}"' ${{ env.MANIFESTS_PATH }}/recommendation-service.yaml
+          
+          # Update voting-service.yaml
+          yq e -i '.spec.template.spec.containers[0].image = "${{ env.DOCKERHUB_REPO }}:voting-${{ github.sha }}"' ${{ env.MANIFESTS_PATH }}/voting-service.yaml
+      
+      # Commit the changes back to the repository
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "${{ env.GIT_USERNAME }}"
+          git config --global user.email "${{ env.GIT_EMAIL }}"
+          
+          git add ${{ env.MANIFESTS_PATH }}/*.yaml
+          
+          # Only commit if there are changes
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update image tags to ${{ github.sha }}"
+            git push origin argo-dev
+          fi
+      
+      - name: Generate build summary
+        run: |
+          echo "# Microservices Build and Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Catalogue**: ${{ env.DOCKERHUB_REPO }}:catalogue-${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Frontend**: ${{ env.DOCKERHUB_REPO }}:frontend-${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Recommendation**: ${{ env.DOCKERHUB_REPO }}:recommendation-${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Voting**: ${{ env.DOCKERHUB_REPO }}:voting-${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "ArgoCD will automatically sync these changes to your Kubernetes cluster." >> $GITHUB_STEP_SUMMARY

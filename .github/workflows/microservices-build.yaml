@@ -2,8 +2,8 @@ name: Build all and and Push -> dockerhub
 
 on:
   push:
-    branches:
-      - main
+    # branches:
+    #   - main
 
   workflow_dispatch:
 
@@ -33,8 +33,8 @@ jobs:
         with:
           context: ./microservices-on-k8s/catalogue
           push: true
-          tags: ${{ env.DOCKERHUB_REPO }}:catalogue-latest
-          # tags: ${{ env.DOCKERHUB_REPO }}:catalogue-latest,${{ env.DOCKERHUB_REPO }}:catalogue-${{ github.sha }}
+          # tags: ${{ env.DOCKERHUB_REPO }}:catalogue-latest
+          tags: ${{ env.DOCKERHUB_REPO }}:catalogue-${{ github.sha }}
       
       # Build Frontend Service
       - name: Build and push Frontend
@@ -42,7 +42,7 @@ jobs:
         with:
           context: ./microservices-on-k8s/frontend
           push: true
-          tags: ${{ env.DOCKERHUB_REPO }}:frontend-latest,${{ env.DOCKERHUB_REPO }}:frontend-${{ github.sha }}
+          tags: ${{ env.DOCKERHUB_REPO }}:frontend-${{ github.sha }}
       
       # Build Recommendation Service
       - name: Build and push Recommendation
@@ -50,7 +50,7 @@ jobs:
         with:
           context: ./microservices-on-k8s/recommendation
           push: true
-          tags: ${{ env.DOCKERHUB_REPO }}:recommendation-latest,${{ env.DOCKERHUB_REPO }}:recommendation-${{ github.sha }}
+          tags: ${{ env.DOCKERHUB_REPO }}:recommendation-${{ github.sha }}
       
       # Build Voting Service
       - name: Build and push Voting
@@ -58,7 +58,7 @@ jobs:
         with:
           context: ./microservices-on-k8s/voting
           push: true
-          tags: ${{ env.DOCKERHUB_REPO }}:voting-latest,${{ env.DOCKERHUB_REPO }}:voting-${{ github.sha }}
+          tags: ${{ env.DOCKERHUB_REPO }}:voting-${{ github.sha }}
       
       - name: Generate build summary
         run: |

@@ -54,8 +54,8 @@ minikube addons enable ingress
 ```bash
 # Create AWS credentials secret (replace with your actual credentials)
 kubectl create secret generic aws-credentials \
-  --from-literal=aws_access_key_id=YOUR_ACCESS_KEY \
-  --from-literal=aws_secret_access_key=YOUR_SECRET_KEY
+  --from-literal=aws_access_key_id=aws_access_key \
+  --from-literal=aws_secret_access_key=aws_secret_key
 ```
 
 ### 4. Deploy Services
