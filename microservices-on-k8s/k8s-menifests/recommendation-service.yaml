@@ -8,11 +8,6 @@ data:
     {
       "version": "1.0.0"
     }
-spec:
-  template:
-    spec:
-      containers:
-        - image: livingdevopswithakhilesh/microservices:recommendation-644625f8de627843afd6fc916bc30459705c2726
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -32,41 +27,41 @@ spec:
         app: recommendation-service
     spec:
       containers:
-        - name: recommendation-service
-          image: livingdevopswithakhilesh/microservices:recommendation-644625f8de627843afd6fc916bc30459705c2726
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8080
-          volumeMounts:
-            - name: config-volume
-              mountPath: /app/config.json
-              subPath: config.json
-          resources:
-            requests:
-              memory: "128Mi"
-              cpu: "100m"
-            limits:
-              memory: "256Mi"
-              cpu: "200m"
-          livenessProbe:
-            httpGet:
-              path: /api/recommendation-status
-              port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /api/recommendation-status
-              port: 8080
-            initialDelaySeconds: 5
-            periodSeconds: 5
-      volumes:
+      - name: recommendation-service
+        image: livingdevopswithakhilesh/microservices:recommendation-644625f8de627843afd6fc916bc30459705c2726
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        volumeMounts:
         - name: config-volume
-          configMap:
-            name: recommendation-config
-            items:
-              - key: config.json
-                path: config.json
+          mountPath: /app/config.json
+          subPath: config.json
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /api/recommendation-status
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/recommendation-status
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: config-volume
+        configMap:
+          name: recommendation-config
+          items:
+          - key: config.json
+            path: config.json
 ---
 apiVersion: v1
 kind: Service
@@ -77,10 +72,6 @@ spec:
   selector:
     app: recommendation-service
   ports:
-    - port: 8080
-      targetPort: 8080
+  - port: 8080
+    targetPort: 8080
   type: ClusterIP
-  template:
-    spec:
-      containers:
-        - image: livingdevopswithakhilesh/microservices:recommendation-644625f8de627843afd6fc916bc30459705c2726
