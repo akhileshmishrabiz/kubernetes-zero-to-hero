@@ -40,8 +40,8 @@ spec:
     spec:
       containers:
       - name: voting-service
-        image: livingdevopswithakhilesh/microservices:voting-latest
-        imagePullPolicy: Always 
+        image: my/craftista-voting:dev  # local image build
+        imagePullPolicy: Never # to use local image only
         ports:
         - containerPort: 8080
         volumeMounts:
