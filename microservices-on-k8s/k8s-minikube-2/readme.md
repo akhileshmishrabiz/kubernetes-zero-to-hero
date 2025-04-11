@@ -196,3 +196,6 @@ echo "ArgoCD Initial Password: $ARGO_PWD"
 # Password: use the output from above command
 
 ```
+
+
+Interviewer: why should we hire you?

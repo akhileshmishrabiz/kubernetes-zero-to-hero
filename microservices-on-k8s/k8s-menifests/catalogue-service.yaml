@@ -80,7 +80,7 @@ spec:
               key: aws_secret_access_key
       containers:
       - name: catalogue-service
-        image: livingdevopswithakhilesh/microservices:catalogue-d2760adff9994b633db068b7f7b724098ab78a60
+        image: livingdevopswithakhilesh/microservices:catalogue-644625f8de627843afd6fc916bc30459705c2726
         imagePullPolicy: Always 
         ports:
         - containerPort: 5000

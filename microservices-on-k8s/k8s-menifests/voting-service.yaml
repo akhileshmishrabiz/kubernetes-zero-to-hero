@@ -42,7 +42,7 @@ spec:
     spec:
       containers:
       - name: voting-service
-        image: livingdevopswithakhilesh/microservices:voting-d2760adff9994b633db068b7f7b724098ab78a60
+        image: livingdevopswithakhilesh/microservices:voting-644625f8de627843afd6fc916bc30459705c2726
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
