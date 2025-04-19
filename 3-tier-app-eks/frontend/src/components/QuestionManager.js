@@ -36,7 +36,7 @@ function QuestionManager() {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/quiz/questions`, {
+      const response = await fetch(`${API_URL}/quiz/questions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +108,7 @@ function QuestionManager() {
           }
 
           try {
-            const response = await fetch(`${API_URL}/api/quiz/questions/bulk`, {
+            const response = await fetch(`${API_URL}/quiz/questions/bulk`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

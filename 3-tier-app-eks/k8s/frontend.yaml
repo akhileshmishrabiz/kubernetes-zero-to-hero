@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: livingdevopswithakhilesh/devopsdozo:frontend-latest
+        image: skymonil/frontend-image:v4
         imagePullPolicy: Always
         ports:
         - containerPort: 80

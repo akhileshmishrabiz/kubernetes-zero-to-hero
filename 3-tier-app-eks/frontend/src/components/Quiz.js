@@ -14,7 +14,7 @@ function Quiz() {
   const fetchQuiz = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/quiz/${topic}`);
+      const response = await fetch(`${API_URL}/quiz/${topic}`);
       if (!response.ok) {
         throw new Error('Failed to fetch quiz');
       }
@@ -59,7 +59,7 @@ function Quiz() {
         answers
       });
 
-      const response = await fetch(`${API_URL}/api/quiz/submit`, {
+      const response = await fetch(`${API_URL}/quiz/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

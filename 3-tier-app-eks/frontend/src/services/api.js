@@ -3,7 +3,7 @@ import API_URL from '../config/api';
 
 export const fetchTopics = async () => {
   try {
-    const response = await fetch(`${API_URL}/api/topics`);
+    const response = await fetch(`${API_URL}/topics`);
     if (!response.ok) {
       throw new Error(`Error: ${response.status}`);
     }
@@ -17,7 +17,7 @@ export const fetchTopics = async () => {
 // Add other API calls as needed
 export const createTopic = async (topicData) => {
   try {
-    const response = await fetch(`${API_URL}/api/topics`, {
+    const response = await fetch(`${API_URL}/topics`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
