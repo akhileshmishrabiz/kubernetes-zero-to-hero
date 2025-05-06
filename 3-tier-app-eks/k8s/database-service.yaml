@@ -7,7 +7,7 @@ metadata:
     service: database
 spec:
   type: ExternalName
-  externalName:  akhilesh-postgres.cveph9nmftjh.eu-west-1.rds.amazonaws.com
+  externalName: skymonil-postgres.c54w64eikb30.ap-south-1.rds.amazonaws.com
   ports:
   - port: 5432
   # postgres-db.devopsdozo.svc.cluster.local  
