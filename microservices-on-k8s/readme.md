@@ -1,4 +1,4 @@
-# to run the app from docker compose app
+# To run the app from docker compose app
 docker-compose up --build
 
 
