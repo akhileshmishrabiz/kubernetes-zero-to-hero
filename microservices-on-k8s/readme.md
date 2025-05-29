@@ -17,27 +17,7 @@ docker-compose up --build
 
 ## Architecture Overview
 
-```
-┌─────────────┐      ┌───────────────┐
-│             │      │               │
-│   Ingress   │─────▶│   Frontend    │
-│             │      │               │
-└─────────────┘      └───────┬───────┘
-                             │
-                             ▼
-          ┌─────────────────┬─────────────────┐
-          │                 │                 │
-          ▼                 ▼                 ▼
-┌─────────────────┐ ┌───────────────┐ ┌───────────────┐
-│                 │ │               │ │               │
-│   Catalogue     │ │Recommendation │ │    Voting     │
-│                 │ │               │ │               │
-└─────────────────┘ └───────────────┘ └───────────────┘
-          │                                   ▲
-          │                                   │
-          └───────────────────────────────────┘
-                 (Voting syncs from Catalogue)
-```
+![alt text](Architecture.svg)
 
 ## Deployment Requirements
 
