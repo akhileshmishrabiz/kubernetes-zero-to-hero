@@ -1,15 +1,19 @@
-# To run the app from docker compose app
+
+## Table of Contents
+- [Table of Contents](#table-of-contents)
+- [To run the app from docker compose app](#to-run-the-app-from-docker-compose-app)
+- [Architecture Overview](#architecture-overview)
+- [Deployment Requirements](#deployment-requirements)
+  - [Service Dependencies](#service-dependencies)
+  - [Network Configuration](#network-configuration)
+- [Deployment Order](#deployment-order)
+- [Example Kubernetes Configuration](#example-kubernetes-configuration)
+- [Monitoring and Health Checks](#monitoring-and-health-checks)
+- [Scaling Considerations](#scaling-considerations)
+
+
+## To run the app from docker compose app
 docker-compose up --build
-
-
-# Craftista Microservices Application
-
-This is a microservices-based origami crafting application consisting of four services:
-
-- **Frontend**: UI service that integrates with all backend services
-- **Catalogue**: Manages product information
-- **Recommendation**: Provides daily origami recommendations
-- **Voting**: Handles voting for origami items
 
 ## Architecture Overview
 
